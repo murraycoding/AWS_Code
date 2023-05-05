@@ -49,7 +49,7 @@ def lambda_handler(event, context):
     elif http_method == post_method and path == flower_path:
         print("DEBUG: The API is creating a new flower.")
         request_body = json.loads(event['body'])
-        response = add_flower(request_body) # adds new flower with 0 inventory
+        response = add_flower(request_body)
     elif http_method == put_method and path == flower_path:
         print("DEBUG: The API is editing a flower.")
         request_body = json.loads(event['body'])
@@ -99,26 +99,12 @@ def remove_flower(flower_id): # <== query string parameter
             Key = {
                 'flower_id': flower_id
             },
-            ReturnValues = 'ALL_OLD'   # <== I think this is needed? 
+            ReturnValues = 'ALL_OLD' 
         )
 
         body = {
             'Message': 'This is a test.'
         }
-        # response body back to the client
-        """
-        body = {
-            'Operation': 'Delete',
-            'Message': 'Success',
-            'Item': {
-                'flower_id': response['flower_id'],
-                'name': response['name'],
-                'color': response['color'],
-                'price': response['price'],
-                'quantity': response['quantity']
-            }
-        }
-        """
 
         return build_response(200, body)
     
@@ -235,7 +221,7 @@ def make_purchase(flower_list):
     # To-Do 
     # (1) Make a new record in the purchases table
     # (2) Update the inventory to reflect the added purchases
-
+    pass
     
 
 # function to take information from the request and build the response to send to the client
