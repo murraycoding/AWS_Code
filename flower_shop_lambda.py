@@ -1,6 +1,7 @@
 import boto3
 import json
 from custom_encoder import Customer_Encoder
+import uuid
 
 # logging packages
 import logging
@@ -77,6 +78,9 @@ def lambda_handler(event, context):
         response = build_response(404, 'Not Found')
     return response
 
+def get_random_primary_key():
+    return uuid.uuid4()
+
 def get_flower(flower_id):
     try:
         response = inventory_table.get_item(
@@ -111,7 +115,7 @@ def remove_flower(flower_id): # <== query string parameter
     except:
         logger.exception("Can't delete the item.")
 
-# function will add flower listing to inventory with a quantity of zero
+# function will add flower listing to inventory
 def add_flower(request_body):
     try:
         inventory_table.put_item(Item=request_body)
