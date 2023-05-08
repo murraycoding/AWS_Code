@@ -11,11 +11,7 @@ logger.setLevel(logging.INFO)
 flower_inventory_table_name = 'flower_inventory'
 flower_sales_table_name = 'flower_sales'
 flower_purchases_table_name = 'flower_purchases'
-dynamodb = boto3.resource('dynamodb')
 client = boto3.client('dynamodb')
-inventory_table = dynamodb.Table(flower_inventory_table_name)
-sales_table = dynamodb.Table(flower_sales_table_name)
-purchase_table = dynamodb.Table(flower_purchases_table_name)
 
 get_method = 'GET'
 post_method = 'POST'
@@ -37,7 +33,16 @@ def lambda_handler(event, context):
     # health api endpoint
     if http_method == get_method and path == health_path:
         response = build_response(200)
-    
+
+    # flowers end point
+    elif http_method == get_method and path == flowers_path:
+        print('DEBUG: The API is getting information on all of the flowers')
+        response = get_flowers()
+
+
+    elif flower_id == None:
+        build_response(404, 'Flower ID should be built in the response body')
+
     # flower end point
     elif http_method == get_method and path == flower_path:
         print('DEBUG: Lambda hits the get_flower')
@@ -45,6 +50,12 @@ def lambda_handler(event, context):
     elif http_method == delete_method and path == flower_path:
         print('DEBUG: Lmabda hits the delete flower method')
         response = remove_flower(flower_id)
+    elif http_method == post_method and path == flower_path:
+        print("DEBUG: The API is creating a new flower.")
+        response = add_flower(flower_id, request_body)
+    elif http_method == put_method and path == flower_path:
+        print("DEBUG: The API is editing a flower.")
+        response = update_flower(flower_id, request_body)
 
 
 def build_response(status_code, body=None):
@@ -81,7 +92,38 @@ def update_flower(flower_id, request_body):
     pass
 
 def get_flowers():
-    pass
+    try:
+        response = client.scan(
+            TableName = flower_inventory_table_name,
+            ExpressionAttributeNames = {
+                '#FN': 'flower_name',
+                '#FC': 'flower_color'
+            },
+            ProjectionExpression = '#FN, #FC'
+        )
+        result = response['Items']
+
+        while 'LastEvaluatedKey' in response:
+            response = client.scan(
+                TableName = flower_inventory_table_name,
+                ExpressionAttributeNames = {
+                '#FN': 'flower_name',
+                '#FC': 'flower_color'
+                },
+                ProjectionExpression = '#FN, #FC'
+            )
+            result.extend(response['Items'])
+    
+        body = {
+            'flowers': result
+        }
+    
+    except:
+        print("There is a mistake there")
+        return None
+
+
+    
 
 def make_sale():
     pass
