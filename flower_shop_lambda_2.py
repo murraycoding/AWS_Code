@@ -31,12 +31,21 @@ def lambda_handler(event, context):
     logger.info(event)
     http_method = event['httpMethod']
     path = event['path']
+    request_body = json.loads(event['body'])
+    flower_id = build_flower_id(request_body)
 
     # health api endpoint
     if http_method == get_method and path == health_path:
         response = build_response(200)
     
-    
+    # flower end point
+    elif http_method == get_method and path == flower_path:
+        print('DEBUG: Lambda hits the get_flower')
+        response = get_flower(flower_id)
+    elif http_method == delete_method and path == flower_path:
+        print('DEBUG: Lmabda hits the delete flower method')
+        response = remove_flower(flower_id)
+
 
 def build_response(status_code, body=None):
     response = {
@@ -49,3 +58,34 @@ def build_response(status_code, body=None):
     if body is not None:
         response['body'] = json.dumps(body, cls=Customer_Encoder)
     return response
+
+def build_flower_id(request_body):
+    try:
+        flower_name = request_body['name']
+        flower_color = request_body['color']
+        return f'{flower_color}_{flower_name}'
+
+    except:
+        return None
+
+def get_flower(flower_id):
+    pass
+
+def remove_flower(flower_id):
+    pass
+
+def add_flower(flower_id, request_body):
+    pass
+
+def update_flower(flower_id, request_body):
+    pass
+
+def get_flowers():
+    pass
+
+def make_sale():
+    pass
+
+def make_puchase():
+    pass
+
