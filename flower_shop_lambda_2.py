@@ -17,6 +17,7 @@ get_method = 'GET'
 post_method = 'POST'
 delete_method = 'DELETE'
 put_method = 'PUT'
+patch_method = 'PATCH'
 health_path = '/health' # health of the API
 flower_path = '/flower'
 flowers_path = '/flowers'
@@ -44,7 +45,7 @@ def lambda_handler(event, context):
         response = make_sale(request_body)
 
     # purchase endpoint
-    elif http_method == post_method and path == purchase_path:
+    elif http_method == patch_method and path == purchase_path:
         print("DEBUG: The API is making a purchase of flowers to add to the inventory")
         request_body = json.loads(event['body'])
         response = make_puchase(request_body)
@@ -65,7 +66,7 @@ def lambda_handler(event, context):
         request_body = json.loads(event['body'])
         flower_id = build_flower_id(request_body)
         response = add_flower(flower_id, request_body)
-    elif http_method == put_method and path == flower_path:
+    elif http_method == post_method and path == flower_path:
         print("DEBUG: The API is editing a flower.")
         request_body = json.loads(event['body'])
         flower_id = build_flower_id(request_body)
@@ -142,6 +143,7 @@ def remove_flower(flower_id):
         logger.exception("Can't remove the flower")
 
 def add_flower(flower_id, request_body):
+    print(f"The API is calling the add_flower method for {flower_id}.")
     try:
         name = request_body['name']
         color = request_body['color']
@@ -201,6 +203,7 @@ def add_flower(flower_id, request_body):
     
 
 def update_flower(flower_id, request_body):
+    print(f"The API is calling the update_flower method with {flower_id}.")
     try:
         name = request_body['name']
         color = request_body['color']
@@ -296,15 +299,19 @@ def get_flowers():
 def make_sale(request_body):
     pass
 
-def make_puchase(request_body):
+def make_puchase(purchase_body):
     # separates out each item
-    for item in request_body['Items']:
+    for item in purchase_body['Items']:
         flower_id = build_flower_id(item)
         print(f'Flower ID = {flower_id}')
+        name = item['name']
+        color = item['color']
+        added_quantity = int(item['quantity'])
 
         # API will try to get the flower
         try:
             response = client.get_item(
+                TableName = flower_inventory_table_name,
                 Key = {
                     'flower_id': {
                         'S': flower_id
@@ -312,19 +319,27 @@ def make_puchase(request_body):
                 }
             )
 
+            old_item = response['Item']
+            starting_quantity = int(old_item['quantity'])
+            price = old_item['price']
+
+            new_quantity = str(starting_quantity + added_quantity)
+            print(f"The API is updating {flower_id}")
             # if the flower already exists, keep the information and add the quantity
+
             update_response = update_flower(
                 flower_id = flower_id,
                 request_body = {
-                    'name': item['name'],
-                    'color': item['color'],
-                    'price': response['Item']['price'],
-                    'quantity': str(int(response['Item']['quantity']) + int(item['quantity'])) 
+                    'name': name,
+                    'color': color,
+                    'price': price,
+                    'quantity': new_quantity
                 }
             )
 
         # flower does not exist, need to make a new table entry - price = 0
         except:
+            print(f"The flower id {flower_id} has not been found in the table.")
             response = add_flower(
                 flower_id = flower_id,
                 request_body = {
@@ -337,7 +352,7 @@ def make_puchase(request_body):
 
     body = {
         'Operation': 'Purchase',
-        'Message': 'Success',
+        'Message': 'Success'
     }
     
     return build_response(200, body)
