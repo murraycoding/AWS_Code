@@ -12,6 +12,8 @@ flower_inventory_table_name = 'flower_inventory'
 flower_sales_table_name = 'flower_sales'
 flower_purchases_table_name = 'flower_purchases'
 client = boto3.client('dynamodb')
+db = boto3.resource('dynamodb')
+inventory_table = db.Table(flower_inventory_table_name)
 
 get_method = 'GET'
 post_method = 'POST'
@@ -310,23 +312,22 @@ def make_puchase(purchase_body):
 
         # API will try to get the flower
         try:
-            response = client.get_item(
-                TableName = flower_inventory_table_name,
+            print("the API is going here in the make purchase area.")
+            response = inventory_table.get_item(
                 Key = {
-                    'flower_id': {
-                        'S': flower_id
-                    }
+                    'flower_id': flower_id
                 }
-            )
+                )
 
             old_item = response['Item']
             starting_quantity = int(old_item['quantity'])
-            price = old_item['price']
+            price = str(old_item['price'])
 
             new_quantity = str(starting_quantity + added_quantity)
             print(f"The API is updating {flower_id}")
             # if the flower already exists, keep the information and add the quantity
-
+            print(f'Added quantity: {added_quantity}')
+            print(f'Old quantity: {starting_quantity}')
             update_response = update_flower(
                 flower_id = flower_id,
                 request_body = {
