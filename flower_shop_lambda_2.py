@@ -3,6 +3,7 @@ import json
 import uuid
 from custom_encoder import Customer_Encoder
 import logging
+from datetime import date
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -350,6 +351,8 @@ def make_puchase(purchase_body):
                     'quantity': item['quantity']
                 }
             )
+    
+    
 
     body = {
         'Operation': 'Purchase',
@@ -358,3 +361,43 @@ def make_puchase(purchase_body):
     
     return build_response(200, body)
 
+# function to add to a separate table with a transation
+def record_transaction(details_body, table_resource):
+    item_count = 0
+    total_items = 0
+
+    today = date.today()
+    today_formatted = str(today.strftime("%m/%d/%y"))
+
+    # summarizes the information in details body
+    for item in details_body:
+        item_count += 1
+        total_items += item['quantity']
+    
+    print(f'Item Count = {item_count}')
+    print(f'Total Items = {total_items}')
+
+    # updates the table
+    table_resource.update_item(
+        Key = {
+            'transaction_id': uuid.uuid4()
+        },
+        ExpressionAttributeNames = {
+            '#D': "date",
+            '#C': "item_count",
+            '#T': "total_items"
+        },
+        ExpressionAttributeValues = {
+            ':d': {
+                'S': today_formatted
+            },
+            ':c': {
+                'N': item_count
+            },
+            ':t': {
+                'N': total_items
+            }
+        },
+        ReturnValues = 'ALL_NEW',
+        UpdateExpression = 'SET #D = :d, #C = :c, #T = :t'
+    )
