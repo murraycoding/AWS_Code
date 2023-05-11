@@ -15,6 +15,7 @@ flower_purchases_table_name = 'flower_purchases'
 client = boto3.client('dynamodb')
 db = boto3.resource('dynamodb')
 inventory_table = db.Table(flower_inventory_table_name)
+purchases_table = db.Table(flower_purchases_table_name)
 
 get_method = 'GET'
 post_method = 'POST'
@@ -352,7 +353,8 @@ def make_puchase(purchase_body):
                 }
             )
     
-    
+    # records the transaction in the dynamodb table
+    record_transaction(purchase_body['Items'], purchases_table, "puchase_id")
 
     body = {
         'Operation': 'Purchase',
@@ -362,7 +364,7 @@ def make_puchase(purchase_body):
     return build_response(200, body)
 
 # function to add to a separate table with a transation
-def record_transaction(details_body, table_resource):
+def record_transaction(details_body, table_resource, key_string):
     item_count = 0
     total_items = 0
 
@@ -372,7 +374,7 @@ def record_transaction(details_body, table_resource):
     # summarizes the information in details body
     for item in details_body:
         item_count += 1
-        total_items += item['quantity']
+        total_items += int(item['quantity'])
     
     print(f'Item Count = {item_count}')
     print(f'Total Items = {total_items}')
@@ -380,7 +382,7 @@ def record_transaction(details_body, table_resource):
     # updates the table
     table_resource.update_item(
         Key = {
-            'transaction_id': uuid.uuid4()
+            key_string: uuid.uuid4
         },
         ExpressionAttributeNames = {
             '#D': "date",
