@@ -1,4 +1,4 @@
-# serverless-connector-sam-app
+# dyanmodb-example
 
 This project contains source code and supporting files for a serverless application that you can deploy with the AWS Serverless Application Model (AWS SAM) command line interface (CLI). It includes the following files and folders:
 
@@ -58,7 +58,7 @@ The API Gateway endpoint API will be displayed in the outputs when the deploymen
 Build your application by using the `sam build` command.
 
 ```bash
-serverless-connector-sam-app$ sam build
+dyanmodb-example$ sam build
 ```
 
 The AWS SAM CLI installs dependencies that are defined in `package.json`, creates a deployment package, and saves it in the `.aws-sam/build` folder.
@@ -68,15 +68,15 @@ Test a single function by invoking it directly with a test event. An event is a 
 Run functions locally and invoke them with the `sam local invoke` command.
 
 ```bash
-serverless-connector-sam-app$ sam local invoke putItemFunction --event events/event-post-item.json
-serverless-connector-sam-app$ sam local invoke getAllItemsFunction --event events/event-get-all-items.json
+dyanmodb-example$ sam local invoke putItemFunction --event events/event-post-item.json
+dyanmodb-example$ sam local invoke getAllItemsFunction --event events/event-get-all-items.json
 ```
 
 The AWS SAM CLI can also emulate your application's API. Use the `sam local start-api` command to run the API locally on port 3000.
 
 ```bash
-serverless-connector-sam-app$ sam local start-api
-serverless-connector-sam-app$ curl http://localhost:3000/
+dyanmodb-example$ sam local start-api
+dyanmodb-example$ curl http://localhost:3000/
 ```
 
 The AWS SAM CLI reads the application template to determine the API's routes and the functions that they invoke. The `Events` property on each function's definition includes the route and method for each path.
@@ -117,7 +117,7 @@ The dead-letter queue is a location for Lambda to send events that could not be 
 Deploy the updated application.
 
 ```bash
-serverless-connector-sam-app$ sam deploy
+dyanmodb-example$ sam deploy
 ```
 
 Open the [**Applications**](https://console.aws.amazon.com/lambda/home#/applications) page of the Lambda console, and choose your application. When the deployment completes, view the application resources on the **Overview** tab to see the new resource. Then, choose the function to see the updated configuration that specifies the dead-letter queue.
@@ -129,7 +129,7 @@ To simplify troubleshooting, the AWS SAM CLI has a command called `sam logs`. `s
 **NOTE:** This command works for all Lambda functions, not just the ones you deploy using AWS SAM.
 
 ```bash
-serverless-connector-sam-app$ sam logs -n putItemFunction --stack-name "serverless-connector-sam-app" --tail
+dyanmodb-example$ sam logs -n putItemFunction --stack-name "dyanmodb-example" --tail
 ```
 
 **NOTE:** This uses the logical name of the function within the stack. This is the correct name to use when searching logs inside an AWS Lambda function within a CloudFormation stack, even if the deployed function name varies due to CloudFormation's unique resource name generation.
@@ -141,8 +141,8 @@ You can find more information and examples about filtering Lambda function logs 
 Tests are defined in the `__tests__` folder in this project. Use `npm` to install the [Jest test framework](https://jestjs.io/) and run unit tests.
 
 ```bash
-serverless-connector-sam-app$ npm install
-serverless-connector-sam-app$ npm run test
+dyanmodb-example$ npm install
+dyanmodb-example$ npm run test
 ```
 
 ## Cleanup
@@ -150,7 +150,7 @@ serverless-connector-sam-app$ npm run test
 To delete the sample application that you created, use the AWS CLI. Assuming you used your project name for the stack name, you can run the following:
 
 ```bash
-sam delete --stack-name "serverless-connector-sam-app"
+sam delete --stack-name "dyanmodb-example"
 ```
 
 ## Resources

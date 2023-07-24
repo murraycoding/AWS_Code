@@ -4,7 +4,7 @@ version = 0.1
 
 [default]
 [default.global.parameters]
-stack_name = "serverless-connector-sam-app"
+stack_name = "flower-shop"
 
 [default.build.parameters]
 cached = true
@@ -17,9 +17,6 @@ lint = true
 capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
 resolve_s3 = true
-s3_prefix = "serverless-connector-sam-app"
-region = "us-east-2"
-image_repositories = []
 
 [default.package.parameters]
 resolve_s3 = true
