@@ -1,22 +1,132 @@
-# This is the SAM template that represents the architecture of your serverless application
-# https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-template-basics.html
-
-# The AWSTemplateFormatVersion identifies the capabilities of the template
-# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/format-version-structure.html
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-
   flower-shop
 
-# Transform section specifies one or more macros that AWS CloudFormation uses to process your template
-# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/transform-section-structure.html
 Transform:
 - AWS::Serverless-2016-10-31
 
-# Resources declares the AWS resources that you want to include in the stack
-# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
+# Resouces needed for the serverless cloud inventory system 
 Resources:
+  # Lambda functions
+  flower_function:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/flowers.get_flower_information
+      Runtime: python3.8
+      MemorySize: 128
+      Timeout: 100
+      Description: A function to get the flower information for one or all of the flowers
+      Environment:
+        Variables:
+          # Make table name accessible as environment variable from function code during execution
+          INVENTORY_TABLE: !Ref inventory_table
+      Events:
+        flower_shop_api:
+          Type: Api
+          Properties:
+            Path: /flower/{id}
+            Method: GET
+        flower_shop_api:
+          Type: Api
+          Properties:
+            Path: /flowers
+            Method: GET
+
+  health_function:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/health/health_check
+      Runtime: python3.8
+      MemorySize: 128
+      Timeout: 100
+      Description: A function to check the status of the API - nothing should be returned exceot for a success message
+      Events:
+        flower_shop_api:
+          Type: Api
+          Properties:
+            Path: /health
+            Method: GET
+
+   update_inventory_function:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/update_inventory/
+      Runtime: Python 3.8
+      MemorySize: 128
+      Timeout: 100
+      Description: A function to update the flower inventory in the DynamoDB table
+      Environment:
+        Variables:
+          # Make table name accessible as environment variable from function code during execution
+          INVENTORY_TABLE: !Ref inventory_table
+          TRANSACTION_TABLE: !Ref transaction_table
+      Events:
+        flower_shop_api:
+          Type: Api
+          Properties:
+            Path: /purchase
+            Method: PUT
+        flower_shop_api:
+          Type: Api
+          Properties:
+            Path: /sale
+            Method: PATCH
+
+  # dyanmodb tables
+  inventory_table:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: id
+        Type: String
+
+  transaction_table:
+    Type: AWS::Serverless::SimpleTable
+    Properites:
+      PrimaryKey:
+        Name: transaction_id
+        Type: String
+
+  # API information
+  flower_shop_api:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+
+  # Connectors
+  flowerFunction_to_inventoryTable_Connector:
+    Type: AWS::Serverless::Connector
+    Properties:
+      Source:
+        Id: flower_function
+      Destination:
+        Id: inventory_table
+      Permissions:
+        - Read
+
+  transactionFunction_to_inventoryTable_Connector:
+    Type: AWS::Serverless::Connector
+    Properties:
+      Source:
+        Id: transaction_function
+      Destination:
+        Id: inventory_table
+      Permissions:
+        - Read
+        - Write
+
+  transactionFunction_to_transactionTable_Connector:
+    Type: AWS::Serverless::Connector
+    Properties:
+      Source:
+        Id: transaction_function
+      Destination:
+        Id: transaction_table
+      Permissions:
+        - Write
+
   getAllItemsFunctionToTableConnector:
-    Type: AWS::Serverless::Connector # More info about Connector Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-connector.html
+    Type: AWS::Serverless::Connector
     Properties:
       Source:
         Id: getAllItemsFunction
