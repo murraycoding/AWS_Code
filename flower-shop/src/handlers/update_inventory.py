@@ -4,7 +4,7 @@ import boto3
 
 client = boto3.client('dynamodb')
 
-def get_flower_information(event, context):
+def update_inventory_func(event, context):
     if event["httpMethod"] != "GET":
         raise Exception(f"getAllItems only accept GET method, you tried: {event.httpMethod}")
 
