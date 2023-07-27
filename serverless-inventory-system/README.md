@@ -1,160 +1,173 @@
-# flower-shop
+# Serverless Cloud Inventory System
+This project showcases the use of AWS SAM to build and deploy AWS Lambda, API Gateway and DynamoDB for inventory and transaction data storage. Below is the walk through and explaination of the AWS SAM Template and the RestAPI diagram.
 
-This project contains source code and supporting files for a serverless application that you can deploy with the AWS Serverless Application Model (AWS SAM) command line interface (CLI). It includes the following files and folders:
+![Alt serverless cloud inventory system diagram] (https://github.com/murraycoding/AWS_Code/blob/main/flower-shop/Serverless%20Function.drawio.png)
 
-- `src` - Code for the application's Lambda function.
-- `events` - Invocation events that you can use to invoke the function.
-- `__tests__` - Unit tests for the application code. 
-- `template.yaml` - A template that defines the application's AWS resources.
+## AWS SAM Template Walkthrough
 
-The application uses several AWS resources, including Lambda functions, an API Gateway API, and Amazon DynamoDB tables. These resources are defined in the `template.yaml` file in this project. You can update the template to add AWS resources through the same deployment process that updates your application code.
-
-If you prefer to use an integrated development environment (IDE) to build and test your application, you can use the AWS Toolkit.  
-The AWS Toolkit is an open-source plugin for popular IDEs that uses the AWS SAM CLI to build and deploy serverless applications on AWS. The AWS Toolkit also adds step-through debugging for Lambda function code. 
-
-To get started, see the following:
-
-* [CLion](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [GoLand](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [IntelliJ](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [WebStorm](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [Rider](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [PhpStorm](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [PyCharm](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [RubyMine](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [DataGrip](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [VS Code](https://docs.aws.amazon.com/toolkit-for-vscode/latest/userguide/welcome.html)
-* [Visual Studio](https://docs.aws.amazon.com/toolkit-for-visual-studio/latest/user-guide/welcome.html)
-
-## Deploy the sample application
-
-The AWS SAM CLI is an extension of the AWS CLI that adds functionality for building and testing Lambda applications. It uses Docker to run your functions in an Amazon Linux environment that matches Lambda. It can also emulate your application's build environment and API.
-
-To use the AWS SAM CLI, you need the following tools:
-
-* AWS SAM CLI - [Install the AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html).
-* Node.js - [Install Node.js 16](https://nodejs.org/en/), including the npm package management tool.
-* Docker - [Install Docker community edition](https://hub.docker.com/search/?type=edition&offering=community).
-
-To build and deploy your application for the first time, run the following in your shell:
-
-```bash
-sam build
-sam deploy --guided
-```
-
-The first command will build the source of your application. The second command will package and deploy your application to AWS, with a series of prompts:
-
-* **Stack Name**: The name of the stack to deploy to CloudFormation. This should be unique to your account and region, and a good starting point would be something matching your project name.
-* **AWS Region**: The AWS region you want to deploy your app to.
-* **Confirm changes before deploy**: If set to yes, any change sets will be shown to you before execution for manual review. If set to no, the AWS SAM CLI will automatically deploy application changes.
-* **Allow SAM CLI IAM role creation**: Many AWS SAM templates, including this example, create AWS IAM roles required for the AWS Lambda function(s) included to access AWS services. By default, these are scoped down to minimum required permissions. To deploy an AWS CloudFormation stack which creates or modifies IAM roles, the `CAPABILITY_IAM` value for `capabilities` must be provided. If permission isn't provided through this prompt, to deploy this example you must explicitly pass `--capabilities CAPABILITY_IAM` to the `sam deploy` command.
-* **Save arguments to samconfig.toml**: If set to yes, your choices will be saved to a configuration file inside the project, so that in the future you can just re-run `sam deploy` without parameters to deploy changes to your application.
-
-The API Gateway endpoint API will be displayed in the outputs when the deployment is complete.
-
-## Use the AWS SAM CLI to build and test locally
-
-Build your application by using the `sam build` command.
-
-```bash
-flower-shop$ sam build
-```
-
-The AWS SAM CLI installs dependencies that are defined in `package.json`, creates a deployment package, and saves it in the `.aws-sam/build` folder.
-
-Test a single function by invoking it directly with a test event. An event is a JSON document that represents the input that the function receives from the event source. Test events are included in the `events` folder in this project.
-
-Run functions locally and invoke them with the `sam local invoke` command.
-
-```bash
-flower-shop$ sam local invoke putItemFunction --event events/event-post-item.json
-flower-shop$ sam local invoke getAllItemsFunction --event events/event-get-all-items.json
-```
-
-The AWS SAM CLI can also emulate your application's API. Use the `sam local start-api` command to run the API locally on port 3000.
-
-```bash
-flower-shop$ sam local start-api
-flower-shop$ curl http://localhost:3000/
-```
-
-The AWS SAM CLI reads the application template to determine the API's routes and the functions that they invoke. The `Events` property on each function's definition includes the route and method for each path.
-
+### Flower Function (AWS Lambda written in Python)
 ```yaml
-      Events:
-        Api:
-          Type: Api
-          Properties:
-            Path: /
-            Method: GET
-```
-
-## Add a resource to your application
-The application template uses AWS SAM to define application resources. AWS SAM is an extension of AWS CloudFormation with a simpler syntax for configuring common serverless application resources, such as functions, triggers, and APIs. For resources that aren't included in the [AWS SAM specification](https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md), you can use the standard [AWS CloudFormation resource types](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html).
-
-Update `template.yaml` to add a dead-letter queue to your application. In the **Resources** section, add a resource named **MyQueue** with the type **AWS::SQS::Queue**. Then add a property to the **AWS::Serverless::Function** resource named **DeadLetterQueue** that targets the queue's Amazon Resource Name (ARN), and a policy that grants the function permission to access the queue.
-
-```
-Resources:
-  MyQueue:
-    Type: AWS::SQS::Queue
-  getAllItemsFunction:
+flowerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src/handlers/get-all-items.getAllItemsHandler
-      Runtime: nodejs16.x
-      DeadLetterQueue:
-        Type: SQS 
-        TargetArn: !GetAtt MyQueue.Arn
-      Policies:
-        - SQSSendMessagePolicy:
-            QueueName: !GetAtt MyQueue.QueueName
+        Handler: src/handlers/flowers.get_flower_information
+        Runtime: python3.8
+        MemorySize: 128
+        Timeout: 100
+        Description: A function to get the flower information for one or all of the flowers
+        Environment:
+            Variables:
+                # Make table name accessible as environment variable from function code during execution
+                INVENTORY_TABLE: !Ref inventoryTable
+        Events:
+            singleFlowerInfo:
+            Type: Api
+            Properties:
+                Path: /flower/{id}
+                Method: GET
+                RestApiId:
+                    Ref: flowerShopApi
+            allFlowerInfo:
+                Type: Api
+                Properties:
+                    Path: /flowers
+                    Method: GET
+                    RestApiId:
+                        Ref: flowerShopApi
 ```
 
-The dead-letter queue is a location for Lambda to send events that could not be processed. It's only used if you invoke your function asynchronously, but it's useful here to show how you can modify your application's resources and function configuration.
+In AWS SAM, you can define different types of resources, each having their own specific properties. In this case, we have a serverless function. While I will not list out every single property, I will describe the ones I think need at least some explanation. For example, the `MemorySize` property just gives the amount of memory allocated to the Lambda function. The `Handler` lists where the code for the Lambda function is within the source files. The Environment property, in this case, lists variables which can be passed to the Lambda function for use there. In the cases of this function (and others in the project), it gives the reference to the DyanmoDB tables needed for the function. By the least privaledge principle, I have only allowed access to the tables needed by the function and no more. Lastly, the `Events` are what triggers the Lambda function to run. In this case, a RESTApi is being built so the events which trigger the lambda function are end users hitting the API end points listed under `Events`. The two API end points here are:
+- `/flower`: Gets the information on a particular flower given the ID of the flower in the DynamoDB table
+- `/flowers`: Gets the information on all flowers in the DyanmoDB table
 
-Deploy the updated application.
+The remainder of the functions will have a less descriptive explaination since most information repeats.
 
-```bash
-flower-shop$ sam deploy
+### Health Function (AWS Lambda written in Python)
+```yaml
+healthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/health/health_check
+      Runtime: python3.8
+      MemorySize: 128
+      Timeout: 100
+      Description: A function to check the status of the API - nothing should be returned exceot for a success message
+      Events:
+        healthCheck:
+          Type: Api
+          Properties:
+            Path: /health
+            Method: GET
+            RestApiId:
+              Ref: flowerShopApi
+```
+This function is just to test the status of the API. For debugging purposes, you can hit this API endpoint to rule out an overall API failure in the case that a particular endpoint is not sending the correct response (or any response at all). Below are the endpoints attached to this Lambda function:
+- `/health`: An endpoint just to test the 'health' of the API
+
+### Update Inventory Function (AWS Lambda written in Python)
+```yaml
+updateInventoryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/update_inventory/update_inventory_func
+      Runtime: python3.8
+      MemorySize: 128
+      Timeout: 100
+      Description: A function to update the flower inventory in the DynamoDB table
+      Environment:
+        Variables:
+          # Make table name accessible as environment variable from function code during execution
+          INVENTORY_TABLE: !Ref inventoryTable
+          TRANSACTION_TABLE: !Ref transactionTable
+      Events:
+        purchaseRequest:
+          Type: Api
+          Properties:
+            Path: /purchase
+            Method: PUT
+            RestApiId:
+              flowerShopApi
+        saleRequest:
+          Type: Api
+          Properties:
+            Path: /sale
+            Method: PATCH
+            RestApiId:
+              flowerShopApi
+```
+This function is very similar to the flower function in the sole fact that it reaches out to DynamoDB tables. Past this, it goes a lot more. There are two general purposes to this one Lambda function. To record a purchase and to record a sale. For the purposes of this function (and API), a "purchase" is when the shop owner will buy more inventory to hold in the shop for future customers to buy and a "sale" is when a customer makes a purchase from the inventory the shop owner has in stock at the time.
+
+Both of these actions require read and write permissions to the inventory table as well as at least write permissions to the transaction table. This is why they have been written as one AWS Lambda function instead of two separate ones. Another main difference is the HTTP methods which will be used to interact with the databases. The purchase endpoint will either need to make a new record for a new item which needs to be added to the inventory or it will need to modify the inventory of an existing item already in the inventory. The `sale` endpoint should only need to modify the existing database. The `purchase` endpoint can either update an existing product in the inventory or add a completely new product to the inventory databse.
+
+### DynamoDB Tables
+```yaml
+# dyanmodb tables
+  inventoryTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: id
+        Type: String
+
+  transactionTable:
+    Type: AWS::Serverless::SimpleTable
+    Properites:
+      PrimaryKey:
+        Name: transactionId
+        Type: String
+```
+Nothing special here, just the listing in the SAM template for the two DyanmoDB tables. There are many other properties you can add here to customize the tables, but these are the basics.
+
+### API Gateway
+```yaml
+# API information
+  flowerShopApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+```
+Simple again, just the minimum properties to get an RESTApi going. The important thing here is the name of the API in the template (`flowerShopApi`) is referenced in the template code for the Lambda function. This allows the Lambda functions to all be connected to the singular API.
+
+### Connectors
+```yaml
+# Connectors
+  flowerFunctionToInventoryTableConnector:
+    Type: AWS::Serverless::Connector
+    Properties:
+      Source:
+        Id: flowerFunction
+      Destination:
+        Id: inventoryTable
+      Permissions:
+        - Read
+
+  updateInventoryFunctionToInventoryTableConnector:
+    Type: AWS::Serverless::Connector
+    Properties:
+      Source:
+        Id: updateInventoryFunction
+      Destination:
+        Id: inventoryTable
+      Permissions:
+        - Read
+        - Write
+
+  updateInventoryFunctionToTransactionTableConnector:
+    Type: AWS::Serverless::Connector
+    Properties:
+      Source:
+        Id: updateInventoryFunction
+      Destination:
+        Id: transactionTable
+      Permissions:
+        - Write
 ```
 
-Open the [**Applications**](https://console.aws.amazon.com/lambda/home#/applications) page of the Lambda console, and choose your application. When the deployment completes, view the application resources on the **Overview** tab to see the new resource. Then, choose the function to see the updated configuration that specifies the dead-letter queue.
+Connectors are what allow  the programatic permissions between different AWS resources. For example, the `flowerFunctionToInventroyTableConnector` simply allows the `FlowerFunction` to *connect* to the `InventoryTable`. In the same template, you also define the permissions. Keep in mind it is always considered a best practice to define permissions with the least privaledge principle in mind. Here I have made the connects with only the needed permissions (and nothing more). 
 
-## Fetch, tail, and filter Lambda function logs
 
-To simplify troubleshooting, the AWS SAM CLI has a command called `sam logs`. `sam logs` lets you fetch logs that are generated by your Lambda function from the command line. In addition to printing the logs on the terminal, this command has several nifty features to help you quickly find the bug.
 
-**NOTE:** This command works for all Lambda functions, not just the ones you deploy using AWS SAM.
 
-```bash
-flower-shop$ sam logs -n putItemFunction --stack-name "flower-shop" --tail
-```
 
-**NOTE:** This uses the logical name of the function within the stack. This is the correct name to use when searching logs inside an AWS Lambda function within a CloudFormation stack, even if the deployed function name varies due to CloudFormation's unique resource name generation.
 
-You can find more information and examples about filtering Lambda function logs in the [AWS SAM CLI documentation](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-logging.html).
 
-## Unit tests
-
-Tests are defined in the `__tests__` folder in this project. Use `npm` to install the [Jest test framework](https://jestjs.io/) and run unit tests.
-
-```bash
-flower-shop$ npm install
-flower-shop$ npm run test
-```
-
-## Cleanup
-
-To delete the sample application that you created, use the AWS CLI. Assuming you used your project name for the stack name, you can run the following:
-
-```bash
-sam delete --stack-name "flower-shop"
-```
-
-## Resources
-
-For an introduction to the AWS SAM specification, the AWS SAM CLI, and serverless application concepts, see the [AWS SAM Developer Guide](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html).
-
-Next, you can use the AWS Serverless Application Repository to deploy ready-to-use apps that go beyond Hello World samples and learn how authors developed their applications. For more information, see the [AWS Serverless Application Repository main page](https://aws.amazon.com/serverless/serverlessrepo/) and the [AWS Serverless Application Repository Developer Guide](https://docs.aws.amazon.com/serverlessrepo/latest/devguide/what-is-serverlessrepo.html).
