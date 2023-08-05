@@ -28,14 +28,11 @@ def get_flower_information(event, context):
     
     # flower endpoint
     if path == FLOWER_PATH:
+        flower_id = event['queryStringParameters']['flower_id']
+        response = get_flower_info(flower_id)
 
-
-    data = client.scan(TableName=os.environ["SAMPLE_TABLE"])
-    items = data["Items"]
-    response = {
-        "statusCode": 200,
-        "body": json.dumps(items)
-    }
+    if path == FLOWERS_PATH:
+        response = get_all_flowers_info()
 
     return response
 
@@ -87,3 +84,38 @@ def get_flower_info(flower_id):
     
     except:
         logger.exception("Cannot find flower information.")
+
+# get information on all flowers
+def get_all_flowers_info():
+    try:
+        response = client.scan(
+            TableName = FLOWER_INVENTORY_TABLE_NAME,
+            ExpressionAttributeNames = {
+                '#N': 'name',
+                '#C' : 'color'
+            },
+            ProjectionExpression = '#N, #C'
+        )
+        result = response['Items']
+
+        while 'LastEvaluatedKey' in response:
+            response = client.scan(
+                TableName = FLOWER_INVENTORY_TABLE_NAME,
+                ExclusiveStartKey = response['LastEvaluatedKey'],
+                ExpressionAttributeName = {
+                    '#N': 'name',
+                    '#C': 'color'
+                },
+                ProjectionExpression = '#N, #C'
+            )
+            result.extend(response['Items'])
+
+        body = {
+            'flowers': result
+        }
+
+        return build_response(200, body)
+    
+    except:
+        print("There is a mistake here.")
+        return None
