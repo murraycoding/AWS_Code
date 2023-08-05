@@ -56,7 +56,7 @@ Resources:
   updateInventoryFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src/handlers/update_inventory/update_inventory_func
+      Handler: src/handlers/update_inventory/flower_transaction_func
       Runtime: python3.8
       MemorySize: 128
       Timeout: 100
