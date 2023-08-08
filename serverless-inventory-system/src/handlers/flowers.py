@@ -33,6 +33,8 @@ def get_flower_information(event, context):
 
     if path == FLOWERS_PATH:
         response = get_all_flowers_info()
+    else:
+        raise Exception("The only supported paths for the GET method are /flower/[flower_id] and /flowers")
 
     return response
 
