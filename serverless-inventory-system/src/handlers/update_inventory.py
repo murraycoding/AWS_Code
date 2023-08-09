@@ -2,6 +2,8 @@ import json
 import os
 import boto3
 import logging
+import random
+import math
 from custom_encoder import Customer_Encoder
 
 logger = logging.getLogger()
@@ -21,14 +23,35 @@ PURCHASE_PATH = "/purchase"
 # function to update inventory and record sale
 def flower_transaction_func(event, context):
 
+    response = {}
+
     logger.info(event)
     http_method = event['httpMethod']
     path = event['path']
+    request_body = json.loads(event['body'])
 
     # makes sure the combination of method and path is supported
     if http_method == PUT_METHOD and path == PURCHASE_PATH:
         # purchase code here
-        next
+        transactionId = math.round(random.random()*10000)
+
+        # summary information on purchase
+        total_flowers = 0
+        total_flower_types = 0
+        total_purchase_price = 0
+
+        for flower in request_body:
+            total_flower_types += 1
+            total_flowers += flower['quantity']
+            total_purchase_price += flower['quantity'] * flower['price']
+
+        # writes the summary information to the transaction table
+        
+        # update inventory table
+
+            # loop over json elements of flowers
+
+
     elif http_method == PATCH_METHOD and path == SALE_PATH:
         # sale code here
         next

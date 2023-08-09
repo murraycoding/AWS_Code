@@ -76,7 +76,7 @@ Resources:
               flowerShopApi
         saleRequest:
           Type: Api
-          Properties:ß
+          Properties:
             Path: /sale
             Method: PATCH
             RestApiId:
