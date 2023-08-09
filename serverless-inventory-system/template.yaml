@@ -24,7 +24,7 @@ Resources:
         singleFlowerInfo:
           Type: Api
           Properties:
-            Path: /flower/{id}
+            Path: /flower # the flower id will be passed in as a query string param
             Method: GET
             RestApiId:
               Ref: flowerShopApi
