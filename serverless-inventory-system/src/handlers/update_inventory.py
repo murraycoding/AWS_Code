@@ -5,6 +5,7 @@ import logging
 import random
 import math
 from custom_encoder import Customer_Encoder
+from flowers import build_flower_id
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -25,36 +26,45 @@ def flower_transaction_func(event, context):
 
     response = {}
 
+    # information from API request
     logger.info(event)
     http_method = event['httpMethod']
     path = event['path']
     request_body = json.loads(event['body'])
 
+    # common information for both paths
+    transactionId = math.round(random.random()*10000)
+
+    # initial information for "total" flower information
+    total_flowers = 0
+    total_flower_types = 0
+    total_price = 0
+
+    # flower loop will run for both paths
+    for flower in request_body:
+        total_flower_types += 1
+        total_flowers += flower['quantity']
+        total_price += flower['quantity'] * flower['price']
+
+        # generates flower_id based on the flower information in the request body
+        flower_id = build_flower_id(request_body = flower)
+
+
     # makes sure the combination of method and path is supported
     if http_method == PUT_METHOD and path == PURCHASE_PATH:
-        # purchase code here
-        transactionId = math.round(random.random()*10000)
-
-        # summary information on purchase
-        total_flowers = 0
-        total_flower_types = 0
-        total_purchase_price = 0
-
-        for flower in request_body:
-            total_flower_types += 1
-            total_flowers += flower['quantity']
-            total_purchase_price += flower['quantity'] * flower['price']
 
         # writes the summary information to the transaction table
-        
+        transaction_response = write_to_transaction_table(transactionId, total_flower_types, total_flowers, total_price, "purchase")
+
         # update inventory table
+        current_quantity = get_flower_quantity(flower_id)
 
             # loop over json elements of flowers
 
 
     elif http_method == PATCH_METHOD and path == SALE_PATH:
-        # sale code here
-        next
+        
+        transaction_response = write_to_transaction_table(transactionId, total_flower_types, total_flowers, total_price, "sale")
  
 
 
@@ -102,4 +112,28 @@ def write_to_transaction_table(transaction_id, total_flower_types, total_flowers
         },
         ReturnValues = 'ALL_NEW',
         UpdateExpression = 'SET #F = :f, #T = :t, #P = :p, #S = :s'
+    )
+
+    return response
+
+def update_inventory_table(flower_id, quantity, sale_purchase):
+
+    response = {}
+    # search for the item in the table
+
+    # calculate new total
+
+    # write new information to the table
+
+    # return the response
+
+    return response
+
+def get_flower_quantity(flower_id):
+
+    response = client.get_item(
+        TableName = FLOWER_INVENTORY_TABLE_NAME,
+        Key = {
+            'flower_id'
+        }
     )
