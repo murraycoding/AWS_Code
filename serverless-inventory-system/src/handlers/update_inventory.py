@@ -69,3 +69,37 @@ def flower_transaction_func(event, context):
     # }
 
     return response
+
+def write_to_transaction_table(transaction_id, total_flower_types, total_flowers, total_price, sale_puchase = "sale"):
+
+    # writes new item to transaction table
+    response = client.update_item(
+        TableName = TRANSACTION_TABLE_NAME,
+        Key = {
+            'trasnaction_id': {
+                'S': transaction_id
+            }
+        },
+        ExpressionsAttributeNames = {
+            '#F': 'total_flower_types',
+            '#T': 'total_flowers',
+            '#P': 'total_price',
+            '#S': 'sale_purchase'
+        },
+        ExpressionAttributeValues = {
+            ':f': {
+                'N': total_flower_types
+            },
+            ':t': {
+                'N': total_flowers
+            },
+            ':p': {
+                'N': total_price
+            },
+            ':s': {
+                'S': sale_puchase
+            }
+        },
+        ReturnValues = 'ALL_NEW',
+        UpdateExpression = 'SET #F = :f, #T = :t, #P = :p, #S = :s'
+    )
