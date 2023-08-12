@@ -39,6 +39,7 @@ def flower_transaction_func(event, context):
     total_flowers = 0
     total_flower_types = 0
     total_price = 0
+    valid_sale = True   # will change to false if there is not enough inventory
 
     # flower loop will run for both paths
     for flower in request_body:
@@ -46,9 +47,19 @@ def flower_transaction_func(event, context):
         total_flowers += flower['quantity']
         total_price += flower['quantity'] * flower['price']
 
-        # generates flower_id based on the flower information in the request body
-        flower_id = build_flower_id(request_body = flower)
+        flower_id = build_flower_id(flower)
 
+        current_quantity = get_flower_quantity(flower_id)
+
+        # will only effect the result of the 'sale' path
+        if flower['quantity'] > current_quantity:
+            valid_sale = False
+        
+        if path == PURCHASE_PATH:
+            update_quantity(flower_id, flower['quantity'])
+        elif path == SALE_PATH:
+            update_quantity(flower_id, -1 * flower['quantity'])
+                    
 
     # makes sure the combination of method and path is supported
     if http_method == PUT_METHOD and path == PURCHASE_PATH:
@@ -56,8 +67,19 @@ def flower_transaction_func(event, context):
         # writes the summary information to the transaction table
         transaction_response = write_to_transaction_table(transactionId, total_flower_types, total_flowers, total_price, "purchase")
 
+        for flower in request_body:
+            flower_id = build_flower_id(flower)
+
+            # gets current quantity of the flower
+            current_quantity = get_flower_quantity(flower_id)
+
+            # calculates new total
+
+
+            # records updated inventory to table
+            
         # update inventory table
-        current_quantity = get_flower_quantity(flower_id)
+       
 
             # loop over json elements of flowers
 
@@ -130,10 +152,36 @@ def update_inventory_table(flower_id, quantity, sale_purchase):
     return response
 
 def get_flower_quantity(flower_id):
+    try:
+        response = client.get_item(
+            TableName = FLOWER_INVENTORY_TABLE_NAME,
+            Key = {
+                'flower_id' : {
+                    'S': flower_id
+                }
+            }
+        )
 
-    response = client.get_item(
+    except:
+        return None
+
+    return response['quantity']
+
+# separeate function to simplify code
+# to subtract from current total, make the quantity negative
+def update_quantity(flower_id, quantity):
+    response = client.update_item(
         TableName = FLOWER_INVENTORY_TABLE_NAME,
         Key = {
-            'flower_id'
-        }
+            'flower_id': {
+                'S': flower_id
+            }
+        },
+        ExpressionAttributeNames = {
+            '#QTY': 'quantity'
+        },
+        ExpressionAttributeValues = {
+            ':q': quantity
+        },
+        UpdateExpression = 'ADD #QTY = :q'
     )
